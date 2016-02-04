@@ -14,8 +14,8 @@ exports.paths = {
   siteAssets: path.join(__dirname, '../web/public'),
   archivedSites: path.join(__dirname, '../archives/sites'),
   list: path.join(__dirname, '../archives/sites.txt'),
-  index: path.join(__dirname, '../web/public/index.html')
-
+  index: path.join(__dirname, '../web/public/index.html'),
+  loading: path.join(__dirname, '../web/public/loading.html')
 };
 
 // Used for stubbing paths for tests, do not modify
@@ -48,7 +48,7 @@ exports.isUrlInList = function(target, callback) {
 };
 
 exports.addUrlToList = function(url, callback) {
-  fs.writeFile(exports.paths.list, url + '\n', 'UTF-8', {flags: 'a'});
+  fs.appendFile(exports.paths.list, url + '\n', 'UTF-8');
   callback();
 };
 
