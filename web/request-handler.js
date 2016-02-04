@@ -3,28 +3,6 @@ var archive = require('../helpers/archive-helpers');
 var fs = require('fs');
 var http_helpers = require('./http-helpers');
 var _ = require('underscore');
-// require more modules/folders here!
-
-var addPostToList = function(request, response) {
-  var url = '';
-  request.on('data', function(chunk) {
-    url += chunk;
-  });
-  request.on('end', function() {
-    url = url.slice(4);
-    archive.addUrlToList(url, _.identity);
-    var statusCode = 302;
-    response.writeHead(statusCode, http_helpers.headers);
-    fs.readFile(archive.paths.loading, function(err,data){
-      if(err){
-        throw err;
-      } else{
-        response.end(data);
-      }
-    });
-  // response.end(data);
-  });
-};
 
 var handlePost = function(request, response) {
   var url = '';
@@ -35,16 +13,22 @@ var handlePost = function(request, response) {
     url = url.slice(4);
     archive.isUrlInList(url, function(isPresent) {
       if(!isPresent) {
-        handleNewUrl(url, response);
+        archive.addUrlToList(url, _.identity);
+        routeToLoadingPage(url, response);
       } else {
-        handleOldUrl(url, response);
+        archive.isUrlArchived(url, function(isArchived) {
+          if(isArchived) {
+            routeToArchivedPage(url, response);
+          } else {
+            routeToLoadingPage(url, response);
+          }
+        });
       }
     });
   })
 };
 
-var handleNewUrl = function(url, response) {
-  archive.addUrlToList(url, _.identity);
+var routeToLoadingPage = function(url, response) {
   var statusCode = 302;
   response.writeHead(statusCode, http_helpers.headers);
   fs.readFile(archive.paths.loading, function(err,data){
@@ -56,7 +40,7 @@ var handleNewUrl = function(url, response) {
   });
 };
 
-var handleOldUrl = function(url, response) {
+var routeToArchivedPage = function(url, response) {
   var statusCode = 302;
   response.writeHead(statusCode, http_helpers.headers);
   var filePath = archive.paths.archivedSites + '/' + url;
