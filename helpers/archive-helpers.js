@@ -40,6 +40,7 @@ exports.readListOfUrls = function(callback) {
 };
 
 exports.isUrlInList = function(target, callback) {
+  var isPresent;
   var list = exports.readListOfUrls(function(urls) {
     var isPresent = urls.indexOf(target) !== -1;
     callback(isPresent);
@@ -52,12 +53,19 @@ exports.addUrlToList = function(url, callback) {
 };
 
 exports.isUrlArchived = function(url, callback) {
-  var filePath = exports.paths.archivedSites + '/' + url;
-  fs.stat(filePath, function(err, stat) {
-    if (err) {
+  exports.isUrlInList(url, function(isPresent){
+    if(!isPresent){
       callback(false);
-    } else {
-      callback(true);
+    }
+    else {
+      var filePath = exports.paths.archivedSites + '/' + url;
+      fs.stat(filePath, function(err, stat) {
+        if (err) {
+          callback(false);
+        } else {
+          callback(true);
+        }
+      });
     }
   });
 };
@@ -65,10 +73,12 @@ exports.isUrlArchived = function(url, callback) {
 exports.downloadUrls = function(urls) {
   _.each(urls, function(url) {
     var filePath = exports.paths.archivedSites + '/' + url;
-    fs.writeFile(filePath, getHTML(url, function(body) { return body; }), function(err) {
-      if (err) {
-        throw err;
-      }
+    getHTML(url, function(body) { 
+      fs.writeFile(filePath, body, function(err) {
+        if (err) {
+          throw err;
+        }
+      });
     });
   });
 };
