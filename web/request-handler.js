@@ -17,30 +17,28 @@ exports.handleRequest = function (req, res) {
         }
       });
     }
+  } else {
+    archive.isUrlArchived(req.url, function(isArchived) {
+      var url = req.url.slice(1);
+      if (!isArchived) {
+        var statusCode = 404;
+        res.writeHead(statusCode, http_helpers.headers);
+        res.end();
+      } else {
+        if(req.method === 'GET') {
+          var filePath = archive.paths.archivedSites + '/' + url;
+          // console.log('filePath',filePath);
+          fs.readFile(filePath, function(err,data){
+            // console.log('err',err);
+            console.log('data',data);
+            if(err){
+              throw err;
+            } else{
+              res.end(data);
+            }
+          });
+        } 
+      }
+    });
   }
-
-  archive.isUrlArchived(req.url, function(isArchived) {
-    var url = req.url.slice(1);
-    console.log('url', url);
-    console.log('isArchived', isArchived);
-    if (!isArchived) {
-      var statusCode = 404;
-      res.writeHead(statusCode, http_helpers.headers);
-      res.end();
-    } else {
-      if(req.method === 'GET') {
-        var filePath = archive.paths.archivedSites + '/' + url;
-        // console.log('filePath',filePath);
-        fs.readFile(filePath, function(err,data){
-          // console.log('err',err);
-          console.log('data',data);
-          if(err){
-            throw err;
-          } else{
-            res.end(data);
-          }
-        });
-      } 
-    }
-  });
 };

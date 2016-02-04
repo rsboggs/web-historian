@@ -53,19 +53,12 @@ exports.addUrlToList = function(url, callback) {
 };
 
 exports.isUrlArchived = function(url, callback) {
-  exports.isUrlInList(url, function(isPresent){
-    if(!isPresent){
+  var filePath = exports.paths.archivedSites + '/' + url;
+  fs.stat(filePath, function(err, stat) {
+    if (err) {
       callback(false);
-    }
-    else {
-      var filePath = exports.paths.archivedSites + '/' + url;
-      fs.stat(filePath, function(err, stat) {
-        if (err) {
-          callback(false);
-        } else {
-          callback(true);
-        }
-      });
+    } else {
+      callback(true);
     }
   });
 };
