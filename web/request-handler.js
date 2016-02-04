@@ -5,9 +5,23 @@ var http_helpers = require('./http-helpers');
 var _ = require('underscore');
 // require more modules/folders here!
 
+var post = function(request, response) {
+  var url = '';
+  request.on('data', function(chunk) {
+    url += chunk;
+  });
+  request.on('end', function() {
+    url = url.slice(4);
+    archive.addUrlToList(url, _.identity);
+    var statusCode = 302;
+    response.writeHead(statusCode, http_helpers.headers);
+    response.end();
+  });
+};
+
 exports.handleRequest = function (req, res) {
-  
-  if(req.url === '/'){
+  console.log('req', req.method);
+  if(req.url === '/') {
     if(req.method === 'GET'){
       fs.readFile(archive.paths.index, function(err,data){
         if(err){
@@ -16,7 +30,17 @@ exports.handleRequest = function (req, res) {
           res.end(data);
         }
       });
-    }
+    } else if (req.method === 'POST') {
+
+      archive.isUrlInList(req.url, function(isPresent) {
+        if (!isPresent) {
+          post(req, res);
+          //load 'loading' page
+        } else {
+          //load 'archived' page
+        }
+      }); 
+    } 
   } else {
     archive.isUrlArchived(req.url, function(isArchived) {
       var url = req.url.slice(1);
@@ -27,10 +51,7 @@ exports.handleRequest = function (req, res) {
       } else {
         if(req.method === 'GET') {
           var filePath = archive.paths.archivedSites + '/' + url;
-          // console.log('filePath',filePath);
           fs.readFile(filePath, function(err,data){
-            // console.log('err',err);
-            console.log('data',data);
             if(err){
               throw err;
             } else{
