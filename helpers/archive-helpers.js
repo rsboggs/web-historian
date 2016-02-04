@@ -12,7 +12,9 @@ var _ = require('underscore');
 exports.paths = {
   siteAssets: path.join(__dirname, '../web/public'),
   archivedSites: path.join(__dirname, '../archives/sites'),
-  list: path.join(__dirname, '../archives/sites.txt')
+  list: path.join(__dirname, '../archives/sites.txt'),
+  index: path.join(__dirname, '../web/public/index.html')
+
 };
 
 // Used for stubbing paths for tests, do not modify
@@ -25,16 +27,38 @@ exports.initialize = function(pathsObj) {
 // The following function names are provided to you to suggest how you might
 // modularize your code. Keep it clean!
 
-exports.readListOfUrls = function() {
+exports.readListOfUrls = function(callback) {
+  fs.readFile(exports.paths.list, function(err, data){
+    if(err){
+      throw err;
+    } else {
+      var array = data.toString().split('\n');
+      callback(array);
+    }
+  });
 };
 
-exports.isUrlInList = function() {
+exports.isUrlInList = function(target, callback) {
+  var list = exports.readListOfUrls(function(urls) {
+    var isPresent = urls.indexOf(target) !== -1;
+    callback(isPresent);
+  });
 };
 
-exports.addUrlToList = function() {
+exports.addUrlToList = function(url, callback) {
+  fs.writeFile(exports.paths.list, url, 'UTF-8', {flags: 'a'});
+  callback();
 };
 
-exports.isUrlArchived = function() {
+exports.isUrlArchived = function(url, callback) {
+  var filePath = exports.paths.archivedSites + '/' + url;
+  fs.stat(filePath, function(err, stat) {
+    if (err) {
+      callback(false);
+    } else {
+      callback(true);
+    }
+  });
 };
 
 exports.downloadUrls = function() {
